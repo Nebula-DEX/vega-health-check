@@ -21,7 +21,7 @@ var BlockExplorerCmd = &cobra.Command{
 	Use:   "blockexplorer",
 	Short: "Start the block explorer health-check service",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runExplorerHealthCheck(dataNodeHTTPPort, explorerCoreEndpoint, explorerDataNodeAPIEndpoint, explorerEndpoint); err != nil {
+		if err := runExplorerHealthCheck(explorerHTTPPort, explorerCoreEndpoint, explorerDataNodeAPIEndpoint, explorerEndpoint); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -38,6 +38,7 @@ func init() {
 func runExplorerHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint, explorerEndpoint string) error {
 	healthChecks := []checks.HealthCheckFunc{
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
+		checks.CompareVegaAndCurrentTime(coreEndpoint),
 		checks.CheckDataNodeHttpOnlineWrapper(coreEndpoint),
 		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 3*time.Second),
 		checks.CheckExplorerIsOnlineWrapper(explorerEndpoint),

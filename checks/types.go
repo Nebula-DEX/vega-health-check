@@ -15,6 +15,8 @@ const (
 var (
 	ErrCoreHTTPIsNotOnline        error = errors.New("core http endpoint is not online")
 	ErrCoreInvalidResponse        error = errors.New("invalid non json response from core")
+	ErrFailedToParseCurrentTime   error = errors.New("failed to parse current time from statistics endpoint")
+	ErrFailedToParseVegaTime      error = errors.New("failed to parse vega time from statistics endpoint")
 	ErrCoreHttpRequestTookTooLong error = errors.New("http to core request took too long")
 
 	ErrDataNodeHTTPIsNotOnline error = errors.New("data node http endpoint is not online")

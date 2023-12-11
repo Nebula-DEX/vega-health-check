@@ -35,6 +35,7 @@ func runVegaHealthCheck(vegaHTTPPort int, coreEndpoint string) error {
 	ctx := context.Background()
 	healthCheckServer := checks.NewHealthCheckServer(vegaHTTPPort, []checks.HealthCheckFunc{
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
+		checks.CompareVegaAndCurrentTime(coreEndpoint),
 		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 3*time.Second),
 	})
 	healthCheckServer.Start(ctx)

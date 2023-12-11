@@ -12,9 +12,10 @@ import (
 const (
 	tooLongRequestThreshold    = 3 * time.Second
 	dataNodeLagBlocksThreshold = 50
+	timeDiffThreshold          = 60 * time.Second
 )
 
-func CheckDataNodeHttpOnlineWrapper(coreURL string) func() error {
+func CheckDataNodeHttpOnlineWrapper(coreURL string) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/api/v2/info", strings.TrimRight(coreURL, "/")), nil)
 
 	return func() error {
@@ -39,7 +40,7 @@ func CheckDataNodeHttpOnlineWrapper(coreURL string) func() error {
 	}
 }
 
-func CheckVegaHttpOnlineWrapper(coreURL string) func() error {
+func CheckVegaHttpOnlineWrapper(coreURL string) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
 
 	return func() error {
@@ -64,7 +65,7 @@ func CheckVegaHttpOnlineWrapper(coreURL string) func() error {
 	}
 }
 
-func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) func() error {
+func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
 
 	return func() error {
@@ -109,7 +110,7 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) func
 	}
 }
 
-func CheckDataNodeLagWrapper(coreURL string, apiURL string) func() error {
+func CheckDataNodeLagWrapper(coreURL string, apiURL string) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
 
 	return func() error {
@@ -145,7 +146,7 @@ func CheckDataNodeLagWrapper(coreURL string, apiURL string) func() error {
 	}
 }
 
-func CheckExplorerIsOnlineWrapper(explorerEndpoint string) func() error {
+func CheckExplorerIsOnlineWrapper(explorerEndpoint string) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/rest/info", strings.TrimRight(explorerEndpoint, "/")), nil)
 
 	return func() error {
@@ -170,7 +171,7 @@ func CheckExplorerIsOnlineWrapper(explorerEndpoint string) func() error {
 	}
 }
 
-func CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint string) func() error {
+func CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint string) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/rest/transactions", strings.TrimRight(explorerEndpoint, "/")), nil)
 
 	return func() error {
@@ -192,4 +193,35 @@ func CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint string) func
 	}
 }
 
-// https://be0.vega.community/rest/transactions
+func CompareVegaAndCurrentTime(coreURL string) HealthCheckFunc {
+	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
+
+	return func() error {
+		stats := &StatisticsResponse{}
+
+		if _, err := client.Get(stats); err != nil {
+			if errors.Is(err, ErrHTTPFailUnmarshal) {
+				return ErrCoreInvalidResponse
+			}
+
+			return ErrCoreHTTPIsNotOnline
+		}
+
+		currentTime, err := time.Parse(time.RFC3339Nano, stats.Statistics.CurrentTime)
+		if err != nil {
+			return ErrFailedToParseCurrentTime
+		}
+
+		vegaTime, err := time.Parse(time.RFC3339Nano, stats.Statistics.VegaTime)
+		if err != nil {
+			return ErrFailedToParseVegaTime
+		}
+
+		timeDiff := currentTime.Sub(vegaTime)
+		if timeDiff > timeDiffThreshold {
+			return ErrCoreTimeDiffTooBig
+		}
+
+		return nil
+	}
+}

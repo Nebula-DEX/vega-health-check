@@ -33,21 +33,14 @@ jobs:
           ref: ${{ inputs.tag }}
 
       - name: Build binary
-        run: go build -o dist/vega-assistant-${{ matrix.os }}-${{ matrix.arch }} ./main.go
-
-      - name: Bundle binary in archive
-        uses: thedoctor0/zip-release@master
-        with:
-          type: zip
-          directory: dist
-          filename: vega-assistant-${{ matrix.os }}-${{ matrix.arch }}.zip
+        run: go build -o dist/vega-health-check-${{ matrix.os }}-${{ matrix.arch }} ./main.go
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*.zip
+          files: dist/*
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          prerelease: true
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

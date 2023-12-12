@@ -46,7 +46,7 @@ func runExplorerHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint,
 	}
 
 	if dataNodeAPIEndpoint != "" {
-		healthChecks = append(healthChecks, checks.CheckDataNodeLagWrapper(coreEndpoint, dataNodeAPIEndpoint))
+		healthChecks = append(healthChecks, checks.CheckDataNodeLagWrapper(dataNodeAPIEndpoint))
 	}
 
 	ctx := context.Background()

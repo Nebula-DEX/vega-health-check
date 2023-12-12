@@ -29,8 +29,11 @@ func HealthCheckLoop(ctx context.Context, resultChan chan<- Result, checks []Hea
 			}
 		}
 		resultChan <- result
-
-		log.Print("Health check loop execution finished")
+		if len(result.Reasons) < 1 {
+			log.Print("Health check loop execution finished: Node healthy")
+		} else {
+			log.Print("Health check loop execution finished: Node unhealthy")
+		}
 	}
 
 	checkExecution(resultChan, checks)

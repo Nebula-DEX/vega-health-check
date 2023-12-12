@@ -121,8 +121,8 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) Heal
 	}
 }
 
-func CheckDataNodeLagWrapper(coreURL string, apiURL string) HealthCheckFunc {
-	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
+func CheckDataNodeLagWrapper(apiURL string) HealthCheckFunc {
+	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(apiURL, "/")), nil)
 
 	return func() error {
 		stats := &StatisticsResponse{}

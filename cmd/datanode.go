@@ -40,7 +40,7 @@ func runDataNodeHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint 
 		checks.CompareVegaAndCurrentTime(coreEndpoint),
 		checks.CheckDataNodeHttpOnlineWrapper(dataNodeAPIEndpoint),
 		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 3*time.Second),
-		checks.CheckDataNodeLagWrapper(coreEndpoint, dataNodeAPIEndpoint),
+		checks.CheckDataNodeLagWrapper(dataNodeAPIEndpoint),
 	})
 	healthCheckServer.Start(ctx)
 

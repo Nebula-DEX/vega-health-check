@@ -91,7 +91,7 @@ func (hcs *HealthCheckServer) handler() http.HandlerFunc {
 		}
 
 		w.Header().Add("Content-Type", "application/json")
-		if result.Status == StatusHealthy {
+		if result.Status != StatusHealthy {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)

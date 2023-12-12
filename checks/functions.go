@@ -3,6 +3,7 @@ package checks
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,12 +16,14 @@ const (
 	timeDiffThreshold          = 60 * time.Second
 )
 
-func CheckDataNodeHttpOnlineWrapper(coreURL string) HealthCheckFunc {
-	client := NewHTTPChecker(fmt.Sprintf("%s/api/v2/info", strings.TrimRight(coreURL, "/")), nil)
+func CheckDataNodeHttpOnlineWrapper(dataNodeURL string) HealthCheckFunc {
+	client := NewHTTPChecker(fmt.Sprintf("%s/api/v2/info", strings.TrimRight(dataNodeURL, "/")), nil)
 
 	return func() error {
 		result, err := client.Get(nil)
 		if err != nil {
+			log.Printf("CheckDataNodeHttpOnlineWrapper: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrDataNodeInvalidResponse
 			}
@@ -46,6 +49,8 @@ func CheckVegaHttpOnlineWrapper(coreURL string) HealthCheckFunc {
 	return func() error {
 		result, err := client.Get(nil)
 		if err != nil {
+			log.Printf("CheckVegaHttpOnlineWrapper: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrCoreInvalidResponse
 			}
@@ -71,6 +76,8 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) Heal
 	return func() error {
 		stats1 := &StatisticsResponse{}
 		if _, err := client.Get(stats1); err != nil {
+			log.Printf("CheckVegaBlockIncreasedWrapper: check1: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrCoreInvalidResponse
 			}
@@ -82,6 +89,8 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) Heal
 
 		stats2 := &StatisticsResponse{}
 		if _, err := client.Get(stats2); err != nil {
+			log.Printf("CheckVegaBlockIncreasedWrapper: check2: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrCoreInvalidResponse
 			}
@@ -91,10 +100,12 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) Heal
 
 		firstBlock, err := strconv.Atoi(stats1.Statistics.BlockHeight)
 		if err != nil {
+			log.Printf("CheckVegaBlockIncreasedWrapper: conv1: %s", err.Error())
 			return ErrCoreInvalidResponse
 		}
 		secondBlock, err := strconv.Atoi(stats2.Statistics.BlockHeight)
 		if err != nil {
+			log.Printf("CheckVegaBlockIncreasedWrapper: conv2: %s", err.Error())
 			return ErrCoreInvalidResponse
 		}
 
@@ -110,13 +121,15 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) Heal
 	}
 }
 
-func CheckDataNodeLagWrapper(coreURL string, apiURL string) HealthCheckFunc {
-	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
+func CheckDataNodeLagWrapper(apiURL string) HealthCheckFunc {
+	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(apiURL, "/")), nil)
 
 	return func() error {
 		stats := &StatisticsResponse{}
 		response, err := client.Get(stats)
 		if err != nil {
+			log.Printf("CheckDataNodeLagWrapper: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrCoreInvalidResponse
 			}
@@ -126,15 +139,19 @@ func CheckDataNodeLagWrapper(coreURL string, apiURL string) HealthCheckFunc {
 
 		coreBlock, err := strconv.Atoi(stats.Statistics.BlockHeight)
 		if err != nil {
+			log.Printf("CheckDataNodeLagWrapper: conv core block: %s", err.Error())
 			return ErrCoreInvalidResponse
 		}
 
 		dataNodeBlockStr := response.Headers.Get("x-block-height")
 		if dataNodeBlockStr == "" {
+			log.Print("CheckDataNodeLagWrapper: empty response")
 			return ErrCoreInvalidResponse
 		}
 		dataNodeBlock, err := strconv.Atoi(dataNodeBlockStr)
+
 		if err != nil {
+			log.Printf("CheckDataNodeLagWrapper: conv data node: %s", err.Error())
 			return ErrCoreInvalidResponse
 		}
 
@@ -152,6 +169,8 @@ func CheckExplorerIsOnlineWrapper(explorerEndpoint string) HealthCheckFunc {
 	return func() error {
 		result, err := client.Get(nil)
 		if err != nil {
+			log.Printf("CheckExplorerIsOnlineWrapper: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrBlockExplorerInvalidResponse
 			}
@@ -178,6 +197,8 @@ func CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint string) Heal
 		transactions := &TransactionsResponse{}
 
 		if _, err := client.Get(transactions); err != nil {
+			log.Printf("CheckExplorerTransactionListIsNotEmptyWrapper: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrBlockExplorerInvalidResponse
 			}
@@ -200,6 +221,8 @@ func CompareVegaAndCurrentTime(coreURL string) HealthCheckFunc {
 		stats := &StatisticsResponse{}
 
 		if _, err := client.Get(stats); err != nil {
+			log.Printf("CompareVegaAndCurrentTime: %s", err.Error())
+
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
 				return ErrCoreInvalidResponse
 			}
@@ -209,11 +232,13 @@ func CompareVegaAndCurrentTime(coreURL string) HealthCheckFunc {
 
 		currentTime, err := time.Parse(time.RFC3339Nano, stats.Statistics.CurrentTime)
 		if err != nil {
+			log.Printf("CompareVegaAndCurrentTime: convert current time: %s", err.Error())
 			return ErrFailedToParseCurrentTime
 		}
 
 		vegaTime, err := time.Parse(time.RFC3339Nano, stats.Statistics.VegaTime)
 		if err != nil {
+			log.Printf("CompareVegaAndCurrentTime: convert vega time: %s", err.Error())
 			return ErrFailedToParseVegaTime
 		}
 

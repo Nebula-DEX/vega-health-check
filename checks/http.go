@@ -52,6 +52,7 @@ func (c *HTTPChecker) Get(jsonOutput interface{}) (*HTTPCheckResult, error) {
 	if err != nil {
 		return nil, errors.Join(ErrHTTPFailedRequest, err)
 	}
+	defer resp.Body.Close()
 
 	result := &HTTPCheckResult{
 		Duration:   duration,

@@ -28,7 +28,7 @@ var VegaCmd = &cobra.Command{
 
 func init() {
 	VegaCmd.PersistentFlags().IntVar(&vegaHTTPPort, "http-port", 8080, "The HTTP Server port, where health-check is hosted")
-	VegaCmd.PersistentFlags().StringVar(&coreEndpoint, "core-url", "https://localhost:3003", "HTTP URL for the core")
+	VegaCmd.PersistentFlags().StringVar(&coreEndpoint, "core-url", "http://localhost:3003", "HTTP URL for the core")
 }
 
 func runVegaHealthCheck(vegaHTTPPort int, coreEndpoint string) error {

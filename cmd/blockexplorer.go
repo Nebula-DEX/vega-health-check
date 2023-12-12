@@ -30,8 +30,8 @@ var BlockExplorerCmd = &cobra.Command{
 
 func init() {
 	BlockExplorerCmd.PersistentFlags().IntVar(&explorerHTTPPort, "http-port", 8080, "The HTTP Server port, where health-check is hosted")
-	BlockExplorerCmd.PersistentFlags().StringVar(&explorerEndpoint, "blockexplorer-api-url", "https://localhost:1515", "HTTP URL for the explorer service")
-	BlockExplorerCmd.PersistentFlags().StringVar(&explorerCoreEndpoint, "core-url", "https://localhost:3003", "HTTP URL for the core")
+	BlockExplorerCmd.PersistentFlags().StringVar(&explorerEndpoint, "blockexplorer-api-url", "http://localhost:1515", "HTTP URL for the explorer service")
+	BlockExplorerCmd.PersistentFlags().StringVar(&explorerCoreEndpoint, "core-url", "http://localhost:3003", "HTTP URL for the core")
 	BlockExplorerCmd.PersistentFlags().StringVar(&explorerDataNodeAPIEndpoint, "data-node-api-url", "", "HTTP URL for the data node API. If empty We do not check the data node API")
 }
 

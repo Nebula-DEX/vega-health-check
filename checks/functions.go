@@ -16,8 +16,8 @@ const (
 	timeDiffThreshold          = 60 * time.Second
 )
 
-func CheckDataNodeHttpOnlineWrapper(coreURL string) HealthCheckFunc {
-	client := NewHTTPChecker(fmt.Sprintf("%s/api/v2/info", strings.TrimRight(coreURL, "/")), nil)
+func CheckDataNodeHttpOnlineWrapper(dataNodeURL string) HealthCheckFunc {
+	client := NewHTTPChecker(fmt.Sprintf("%s/api/v2/info", strings.TrimRight(dataNodeURL, "/")), nil)
 
 	return func() error {
 		result, err := client.Get(nil)

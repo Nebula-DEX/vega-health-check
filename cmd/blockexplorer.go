@@ -39,7 +39,7 @@ func runExplorerHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint,
 	healthChecks := []checks.HealthCheckFunc{
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
 		checks.CompareVegaAndCurrentTime(coreEndpoint),
-		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 3*time.Second),
+		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 30*time.Second),
 		checks.CheckExplorerIsOnlineWrapper(explorerEndpoint),
 		checks.CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint),
 	}

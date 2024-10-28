@@ -73,9 +73,19 @@ func CheckVegaHttpOnlineWrapper(coreURL string) HealthCheckFunc {
 func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) HealthCheckFunc {
 	client := NewHTTPChecker(fmt.Sprintf("%s/statistics", strings.TrimRight(coreURL, "/")), nil)
 
+	var (
+		nextCheckTime  time.Time
+		lastCheckBlock int
+		lastCheckError error = ErrBlockIncreasedInitializing
+	)
+
 	return func() error {
-		stats1 := &StatisticsResponse{}
-		if _, err := client.Get(stats1); err != nil {
+		if nextCheckTime.After(time.Now()) {
+			return lastCheckError
+		}
+
+		stats := &StatisticsResponse{}
+		if _, err := client.Get(stats); err != nil {
 			log.Printf("CheckVegaBlockIncreasedWrapper: check1: %s", err.Error())
 
 			if errors.Is(err, ErrHTTPFailUnmarshal) {
@@ -85,39 +95,26 @@ func CheckVegaBlockIncreasedWrapper(coreURL string, duration time.Duration) Heal
 			return ErrCoreHTTPIsNotOnline
 		}
 
-		time.Sleep(duration)
-
-		stats2 := &StatisticsResponse{}
-		if _, err := client.Get(stats2); err != nil {
-			log.Printf("CheckVegaBlockIncreasedWrapper: check2: %s", err.Error())
-
-			if errors.Is(err, ErrHTTPFailUnmarshal) {
-				return ErrCoreInvalidResponse
-			}
-
-			return ErrCoreHTTPIsNotOnline
-		}
-
-		firstBlock, err := strconv.Atoi(stats1.Statistics.BlockHeight)
+		blockHeight, err := strconv.Atoi(stats.Statistics.BlockHeight)
 		if err != nil {
 			log.Printf("CheckVegaBlockIncreasedWrapper: conv1: %s", err.Error())
 			return ErrCoreInvalidResponse
 		}
-		secondBlock, err := strconv.Atoi(stats2.Statistics.BlockHeight)
-		if err != nil {
-			log.Printf("CheckVegaBlockIncreasedWrapper: conv2: %s", err.Error())
-			return ErrCoreInvalidResponse
+
+		if lastCheckBlock == 0 {
+			lastCheckError = ErrBlockIncreasedInitializing
+		} else if blockHeight < 100 {
+			lastCheckError = ErrBlockDidNotIncreased
+		} else if blockHeight-lastCheckBlock < 1 {
+			lastCheckError = ErrBlockDidNotIncreased
+		} else {
+			lastCheckError = nil
 		}
 
-		if firstBlock < 100 || secondBlock < 100 {
-			return ErrBlockDidNotIncreased
-		}
+		lastCheckBlock = blockHeight
+		nextCheckTime = time.Now().Add(duration)
 
-		if secondBlock-firstBlock < 1 {
-			return ErrBlockDidNotIncreased
-		}
-
-		return nil
+		return lastCheckError
 	}
 }
 

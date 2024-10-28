@@ -19,6 +19,8 @@ var (
 	checkInterval time.Duration
 )
 
+const increaseBlockPeriod = 10 * time.Second
+
 var BlockExplorerCmd = &cobra.Command{
 	Use:   "blockexplorer",
 	Short: "Start the block explorer health-check service",
@@ -42,7 +44,7 @@ func runExplorerHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint,
 	healthChecks := []checks.HealthCheckFunc{
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
 		checks.CompareVegaAndCurrentTime(coreEndpoint),
-		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 30*time.Second),
+		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, increaseBlockPeriod),
 		checks.CheckExplorerIsOnlineWrapper(explorerEndpoint),
 		checks.CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint),
 	}

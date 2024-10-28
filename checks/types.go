@@ -29,8 +29,9 @@ var (
 
 	ErrDataNodeHttpRequestTookTooLong error = errors.New("http to data node request took too long")
 
-	ErrBlockDidNotIncreased error = errors.New("block did not increased")
-	ErrCoreTimeDiffTooBig   error = errors.New("core time is too far in the past")
+	ErrBlockDidNotIncreased       error = errors.New("block did not increased")
+	ErrBlockIncreasedInitializing error = errors.New("block increased check is still initializing")
+	ErrCoreTimeDiffTooBig         error = errors.New("core time is too far in the past")
 )
 
 type Result struct {

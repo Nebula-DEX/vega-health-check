@@ -32,17 +32,16 @@ func HealthCheckLoop(ctx context.Context, resultChan chan<- Result, checks []Hea
 		}
 	}
 
-	checkExecution(resultChan, checks)
-
 	for {
+		checkExecution(resultChan, checks)
 		select {
 		case <-tick.C:
-			checkExecution(resultChan, checks)
 
 		case <-ctx.Done():
 			log.Printf("Health check loop stopped due to context done")
 
 			return nil
 		}
+
 	}
 }

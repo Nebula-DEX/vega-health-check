@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type HealthCheckServer struct {
@@ -26,7 +27,7 @@ func NewHealthCheckServer(port int, checks []HealthCheckFunc) *HealthCheckServer
 	}
 }
 
-func (hcs *HealthCheckServer) Start(ctx context.Context) {
+func (hcs *HealthCheckServer) Start(ctx context.Context, interval time.Duration) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", hcs.handler())
 
@@ -42,7 +43,7 @@ func (hcs *HealthCheckServer) Start(ctx context.Context) {
 	resultChan := make(chan Result)
 
 	go func() {
-		HealthCheckLoop(ctx, resultChan, hcs.checks)
+		HealthCheckLoop(ctx, resultChan, hcs.checks, interval)
 	}()
 
 	go func() {

@@ -7,13 +7,9 @@ import (
 	"log"
 )
 
-const (
-	checkInterval = 30 * time.Second
-)
+func HealthCheckLoop(ctx context.Context, resultChan chan<- Result, checks []HealthCheckFunc, interval time.Duration) error {
 
-func HealthCheckLoop(ctx context.Context, resultChan chan<- Result, checks []HealthCheckFunc) error {
-
-	tick := time.NewTicker(checkInterval)
+	tick := time.NewTicker(interval)
 
 	checkExecution := func(resultChan chan<- Result, checks []HealthCheckFunc) {
 		result := Result{

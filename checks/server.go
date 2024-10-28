@@ -37,13 +37,17 @@ func (hcs *HealthCheckServer) Start(ctx context.Context, interval time.Duration)
 	}
 
 	go func() {
-		httpSerer.ListenAndServe()
+		if err := httpSerer.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	resultChan := make(chan Result)
 
 	go func() {
-		HealthCheckLoop(ctx, resultChan, hcs.checks, interval)
+		if err := HealthCheckLoop(ctx, resultChan, hcs.checks, interval); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	go func() {
@@ -86,7 +90,9 @@ func (hcs *HealthCheckServer) handler() http.HandlerFunc {
 		resBytes, err := json.Marshal(response)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			if _, err := w.Write([]byte(err.Error())); err != nil {
+				log.Printf("ERROR: failed writing marshal error: %s", err.Error())
+			}
 
 			return
 		}
@@ -98,6 +104,8 @@ func (hcs *HealthCheckServer) handler() http.HandlerFunc {
 			w.WriteHeader(http.StatusOK)
 		}
 
-		w.Write(resBytes)
+		if _, err := w.Write(resBytes); err != nil {
+			log.Printf("ERROR: failed writing http response: %s", err.Error())
+		}
 	}
 }

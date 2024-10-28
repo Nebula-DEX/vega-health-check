@@ -31,6 +31,7 @@ func init() {
 	DataNodeCmd.PersistentFlags().IntVar(&dataNodeHTTPPort, "http-port", 8080, "The HTTP Server port, where health-check is hosted")
 	DataNodeCmd.PersistentFlags().StringVar(&dataNodeCoreEndpoint, "core-url", "http://localhost:3003", "HTTP URL for the core")
 	DataNodeCmd.PersistentFlags().StringVar(&dataNodeAPIEndpoint, "api-url", "http://localhost:3008", "HTTP URL for the data node API")
+	DataNodeCmd.PersistentFlags().DurationVar(&checkInterval, "check-interval", 30*time.Second, "Interval that health checks if node is healthy")
 }
 
 func runDataNodeHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint string) error {
@@ -39,10 +40,10 @@ func runDataNodeHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint 
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
 		checks.CompareVegaAndCurrentTime(coreEndpoint),
 		checks.CheckDataNodeHttpOnlineWrapper(dataNodeAPIEndpoint),
-		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 30*time.Second),
+		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, increaseBlockPeriod),
 		checks.CheckDataNodeLagWrapper(dataNodeAPIEndpoint),
 	})
-	healthCheckServer.Start(ctx)
+	healthCheckServer.Start(ctx, checkInterval)
 
 	<-ctx.Done()
 

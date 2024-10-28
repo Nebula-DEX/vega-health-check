@@ -15,7 +15,11 @@ var (
 	explorerEndpoint            string
 	explorerCoreEndpoint        string
 	explorerDataNodeAPIEndpoint string
+
+	checkInterval time.Duration
 )
+
+const increaseBlockPeriod = 10 * time.Second
 
 var BlockExplorerCmd = &cobra.Command{
 	Use:   "blockexplorer",
@@ -33,13 +37,14 @@ func init() {
 	BlockExplorerCmd.PersistentFlags().StringVar(&explorerEndpoint, "blockexplorer-api-url", "http://localhost:1515", "HTTP URL for the explorer service")
 	BlockExplorerCmd.PersistentFlags().StringVar(&explorerCoreEndpoint, "core-url", "http://localhost:3003", "HTTP URL for the core")
 	BlockExplorerCmd.PersistentFlags().StringVar(&explorerDataNodeAPIEndpoint, "data-node-api-url", "", "HTTP URL for the data node API. If empty We do not check the data node API")
+	BlockExplorerCmd.PersistentFlags().DurationVar(&checkInterval, "check-interval", 30*time.Second, "Interval that health checks if node is healthy")
 }
 
 func runExplorerHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint, explorerEndpoint string) error {
 	healthChecks := []checks.HealthCheckFunc{
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
 		checks.CompareVegaAndCurrentTime(coreEndpoint),
-		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 30*time.Second),
+		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, increaseBlockPeriod),
 		checks.CheckExplorerIsOnlineWrapper(explorerEndpoint),
 		checks.CheckExplorerTransactionListIsNotEmptyWrapper(explorerEndpoint),
 	}
@@ -52,7 +57,7 @@ func runExplorerHealthCheck(vegaHTTPPort int, coreEndpoint, dataNodeAPIEndpoint,
 
 	ctx := context.Background()
 	healthCheckServer := checks.NewHealthCheckServer(vegaHTTPPort, healthChecks)
-	healthCheckServer.Start(ctx)
+	healthCheckServer.Start(ctx, checkInterval)
 
 	<-ctx.Done()
 

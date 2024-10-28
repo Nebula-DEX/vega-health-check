@@ -29,6 +29,7 @@ var VegaCmd = &cobra.Command{
 func init() {
 	VegaCmd.PersistentFlags().IntVar(&vegaHTTPPort, "http-port", 8080, "The HTTP Server port, where health-check is hosted")
 	VegaCmd.PersistentFlags().StringVar(&coreEndpoint, "core-url", "http://localhost:3003", "HTTP URL for the core")
+	VegaCmd.PersistentFlags().DurationVar(&checkInterval, "check-interval", 30*time.Second, "Interval that health checks if node is healthy")
 }
 
 func runVegaHealthCheck(vegaHTTPPort int, coreEndpoint string) error {
@@ -36,9 +37,9 @@ func runVegaHealthCheck(vegaHTTPPort int, coreEndpoint string) error {
 	healthCheckServer := checks.NewHealthCheckServer(vegaHTTPPort, []checks.HealthCheckFunc{
 		checks.CheckVegaHttpOnlineWrapper(coreEndpoint),
 		checks.CompareVegaAndCurrentTime(coreEndpoint),
-		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, 30*time.Second),
+		checks.CheckVegaBlockIncreasedWrapper(coreEndpoint, increaseBlockPeriod),
 	})
-	healthCheckServer.Start(ctx)
+	healthCheckServer.Start(ctx, checkInterval)
 
 	<-ctx.Done()
 
